@@ -46,25 +46,47 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  */
 public class Reflector {
 
+  // 对应Class类型
   private final Class<?> type;
+
+  // 可读属性的名称集合，存在对应getter方法的属性
   private final String[] readablePropertyNames;
+
+  // 可写属性的名称集合
   private final String[] writeablePropertyNames;
+
+  // setter方法名称和调用
   private final Map<String, Invoker> setMethods = new HashMap<>();
+
+  // getter方法名称和调用（包括方法调用和属性调用)
   private final Map<String, Invoker> getMethods = new HashMap<>();
+
+  // setter方法的名称和参数类型（包括方法调用和属性调用)
   private final Map<String, Class<?>> setTypes = new HashMap<>();
+
+  // getter方法的名称和返回值类型
   private final Map<String, Class<?>> getTypes = new HashMap<>();
+
+  // 默认构造方法
   private Constructor<?> defaultConstructor;
 
+  // 所有属性名称的集合
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
   public Reflector(Class<?> clazz) {
     type = clazz;
+    // 无参数构造方法
     addDefaultConstructor(clazz);
     addGetMethods(clazz);
     addSetMethods(clazz);
+    // 处理没有get set的字段
     addFields(clazz);
+
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
+
     writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
+
+    // 记录所有大写形式的属性名
     for (String propName : readablePropertyNames) {
       caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
     }
@@ -83,19 +105,26 @@ public class Reflector {
   }
 
   private void addGetMethods(Class<?> cls) {
+    // propName --> method
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
     Method[] methods = getClassMethods(cls);
     for (Method method : methods) {
+
+      // valid get method should not have any params
       if (method.getParameterTypes().length > 0) {
         continue;
       }
       String name = method.getName();
-      if ((name.startsWith("get") && name.length() > 3)
-          || (name.startsWith("is") && name.length() > 2)) {
+      boolean validGetName = name.startsWith("get") && name.length() > 3;
+      boolean validBooleanName = name.startsWith("is") && name.length() > 2;
+      if (validGetName || validBooleanName) {
+        // get propName by get or is method
         name = PropertyNamer.methodToProperty(name);
+
         addMethodConflict(conflictingGetters, name, method);
       }
     }
+    // 子类覆写父类方法时签名不同被认为两个函数，用此函数解决
     resolveGetterConflicts(conflictingGetters);
   }
 
@@ -110,7 +139,11 @@ public class Reflector {
         }
         Class<?> winnerType = winner.getReturnType();
         Class<?> candidateType = candidate.getReturnType();
+
+
         if (candidateType.equals(winnerType)) {
+          // 返回值类型相同
+
           if (!boolean.class.equals(candidateType)) {
             throw new ReflectionException(
                 "Illegal overloaded getter method with ambiguous type for property "
@@ -119,9 +152,13 @@ public class Reflector {
           } else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
+
         } else if (candidateType.isAssignableFrom(winnerType)) {
+          // candidateType是winner的超级
+
           // OK getter type is descendant
         } else if (winnerType.isAssignableFrom(candidateType)) {
+          // winnerType 是candidateType的超类
           winner = candidate;
         } else {
           throw new ReflectionException(
@@ -229,7 +266,7 @@ public class Reflector {
         result = Array.newInstance((Class<?>) componentType, 0).getClass();
       } else {
         Class<?> componentClass = typeToClass(componentType);
-        result = Array.newInstance((Class<?>) componentClass, 0).getClass();
+        result = Array.newInstance(componentClass, 0).getClass();
       }
     }
     if (result == null) {
@@ -292,6 +329,7 @@ public class Reflector {
     Map<String, Method> uniqueMethods = new HashMap<>();
     Class<?> currentClass = cls;
     while (currentClass != null && currentClass != Object.class) {
+      // add all currentClass methods
       addUniqueMethods(uniqueMethods, currentClass.getDeclaredMethods());
 
       // we also need to look for interface methods -
@@ -306,9 +344,12 @@ public class Reflector {
 
     Collection<Method> methods = uniqueMethods.values();
 
-    return methods.toArray(new Method[methods.size()]);
+    return methods.toArray(new Method[0]);
   }
 
+  /**
+   * 为方法生成唯一签名，并记录到uniqueMethod集合中
+   */
   private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
     for (Method currentMethod : methods) {
       if (!currentMethod.isBridge()) {
@@ -323,6 +364,13 @@ public class Reflector {
     }
   }
 
+  /**
+   * 对方法进行签名
+   *
+   * 返回值类型#方法名：参数类型
+   *
+   * java.lang.String#getSinature:java.lang.reflect.Method
+   */
   private String getSignature(Method method) {
     StringBuilder sb = new StringBuilder();
     Class<?> returnType = method.getReturnType();

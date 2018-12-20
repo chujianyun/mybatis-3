@@ -48,7 +48,7 @@ public class ReflectorTest {
     Assert.assertFalse(reflector.hasGetter("class"));
   }
 
-  static interface Entity<T> {
+  interface Entity<T> {
     T getId();
     void setId(T id);
   }
@@ -72,21 +72,21 @@ public class ReflectorTest {
   }
 
   @Test
-  public void shouldResolveSetterParam() throws Exception {
+  public void shouldResolveSetterParam()  {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     assertEquals(String.class, reflector.getSetterType("id"));
   }
 
   @Test
-  public void shouldResolveParameterizedSetterParam() throws Exception {
+  public void shouldResolveParameterizedSetterParam() {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     assertEquals(List.class, reflector.getSetterType("list"));
   }
 
   @Test
-  public void shouldResolveArraySetterParam() throws Exception {
+  public void shouldResolveArraySetterParam()  {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     Class<?> clazz = reflector.getSetterType("array");
@@ -95,35 +95,35 @@ public class ReflectorTest {
   }
 
   @Test
-  public void shouldResolveGetterType() throws Exception {
+  public void shouldResolveGetterType()  {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     assertEquals(String.class, reflector.getGetterType("id"));
   }
 
   @Test
-  public void shouldResolveSetterTypeFromPrivateField() throws Exception {
+  public void shouldResolveSetterTypeFromPrivateField()  {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     assertEquals(String.class, reflector.getSetterType("fld"));
   }
 
   @Test
-  public void shouldResolveGetterTypeFromPublicField() throws Exception {
+  public void shouldResolveGetterTypeFromPublicField()  {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     assertEquals(String.class, reflector.getGetterType("pubFld"));
   }
 
   @Test
-  public void shouldResolveParameterizedGetterType() throws Exception {
+  public void shouldResolveParameterizedGetterType()  {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     assertEquals(List.class, reflector.getGetterType("list"));
   }
 
   @Test
-  public void shouldResolveArrayGetterType() throws Exception {
+  public void shouldResolveArrayGetterType(){
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Child.class);
     Class<?> clazz = reflector.getGetterType("array");
@@ -164,7 +164,7 @@ public class ReflectorTest {
   }
 
   @Test
-  public void shouldResoleveReadonlySetterWithOverload() throws Exception {
+  public void shouldResolveReadonlySetterWithOverload() throws Exception {
     class BeanClass implements BeanInterface<String> {
       @Override
       public void setId(String id) {

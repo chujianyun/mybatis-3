@@ -31,7 +31,7 @@ public class GetFieldInvoker implements Invoker {
   }
 
   @Override
-  public Object invoke(Object target, Object[] args) throws IllegalAccessException, InvocationTargetException {
+  public Object invoke(Object target, Object[] args) throws IllegalAccessException {
     try {
       return field.get(target);
     } catch (IllegalAccessException e) {
